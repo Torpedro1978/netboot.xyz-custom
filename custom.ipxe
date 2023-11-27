@@ -8,6 +8,7 @@ clear custom_choice
 menu Windows PE
 item --gap Boot Selector
 item hirens ${space} Hirens
+item hirensiso ${space} Hirens ISO
 item veeam_dellw ${space} Veeam DellW
 choose custom_choice || goto custom_exit
 echo ${cls}
@@ -15,6 +16,19 @@ goto ${custom_choice}
 goto custom_exit
 
 :hirens
+set source hirens
+imgfree
+kernel http://${boot_domain}/wimboot
+initrd -n bootmgr     ${win_base_url}/${win_arch}/${source}/bootmgr       bootmgr ||
+initrd -n bootmgr.efi ${win_base_url}/${win_arch}/${source}/bootmgr.efi   bootmgr.efi ||      
+initrd -n bcd         ${win_base_url}/${win_arch}/${source}/boot/bcd      bcd ||
+initrd -n bcd         ${win_base_url}/${win_arch}/${source}/Boot/BCD      bcd ||
+initrd -n boot.sdi    ${win_base_url}/${win_arch}/${source}/boot/boot.sdi boot.sdi ||
+initrd -n boot.sdi    ${win_base_url}/${win_arch}/${source}/Boot/boot.sdi boot.sdi ||
+initrd -n boot.wim    ${win_base_url}/${win_arch}/${source}/sources/boot.wim boot.wim
+boot || goto custom_exit
+
+:hirensiso
 sanboot --no-describe --drive 0x80 http://192.168.1.221:8030/HBCD_PE_x64.iso || goto custom_exit
 boot || goto custom_exit
 
