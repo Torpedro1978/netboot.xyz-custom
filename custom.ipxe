@@ -1,19 +1,32 @@
 #!ipxe
+###
+### Torpedro custom menu 
+###
 
-goto ${menu} ||
-
-:custom_menu
-menu Torpedro1978 custom menu
-item --gap OS:
-item windows ${space} Windows
-choose menu || goto custom_exit
+:custom
+clear custom_choice
+menu Windows
+item --gap Boot Selector
+item Hirens
+item esxi_70_install ${space} 7.0 Installer
+item esxi_70_iso ${space} 7.0 ISO
+choose custom_choice || goto custom_exit
 echo ${cls}
-goto ${menu} ||
-goto change_menu
+goto ${custom_choice}
+goto custom_exit
 
-:change_menu
-chain --autofree https://raw.githubusercontent.com/Torpedro1978/netboot.xyz-custom/master/${menu}.ipxe || goto error
-goto custom_menu
+:Hirens
+sanboot --no-describe --drive 0x80 http://192.168.1.221:8030/HBCD_PE_x64.iso || goto custom_exit
+boot || goto custom_exit
+
+:esxi_70_install
+kernel http://boot.codybunch.lab/VMware/ESXi/v7.0.0U1d/mboot.c32 -c http://boot.codybunch.lab/VMware/ESXi/v7.0.0U1d/boot-70.cfg
+boot || goto custom_exit
+
+:esxi_70_kickstart
+kernel http://boot.codybunch.lab/VMware/ESXi/v7.0.0U1d/mboot.c32 -c http://boot.codybunch.lab/VMware/ESXi/v7.0.0U1d/boot-70-ks.cfg
+boot || goto custom_exit
 
 :custom_exit
-exit 0
+echo Boot failed. Returning to menu
+clear menu
