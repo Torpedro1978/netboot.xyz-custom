@@ -1,66 +1,24 @@
-#!ipxe
+#!ipxe#!ipxe
 
-# Microsoft Windows
-# https://www.microsoft.com
+set base-url http://192.168.1.221:8030/WinPE/x64/hirens
 
-set win_arch x64
-set version hirens
-goto ${menu} ||
+:start
+menu Please choose an option:
+item hirens Hirens Boot CD PE x64
+item exit Exit
+choose --default hirens --timeout 5000 selected
+goto ${selected}
 
-:windows
-set os Hirens Boot CD
-clear win_version
-menu ${os} 
-item --gap Installers
-item win_install ${space} Load ${os} Installer...
-item --gap Options:
-item url_set ${space} Base URL [ ${win_base_url} ]
-item version_set ${space} Version [ ${version} ]
-item arch_set ${space} Architecture [ ${win_arch} ]
-choose win_version || goto windows_exit
-goto ${win_version}
-
-:arch_set
-iseq ${win_arch} x64 && set win_arch x86 || set win_arch x64
-goto windows
-
-:version_set
-echo Set the version of Windows
-echo e.g. 10, hirens, VeeamDellW
-echo
-echo -n Version: ${} && read version
-goto windows
-
-:url_set
-echo Set the HTTP URL of an extracted Windows ISO without the trailing slash:
-echo e.g. http://www.mydomain.com/windows
-echo
-echo -n URL: ${} && read win_base_url
-echo
-echo netboot.xyz will attempt to load the following files:
-echo ${win_base_url}/${win_arch}/bootmgr
-echo ${win_base_url}/${win_arch}/bootmgr.efi
-echo ${win_base_url}/${win_arch}/boot/bcd
-echo ${win_base_url}/${win_arch}/boot/boot.sdi
-echo ${win_base_url}/${win_arch}/sources/boot.wim
-echo
-prompt Press any key to return to Windows Menu...
-goto windows
-
-:win_install
-isset ${win_base_url} && goto boot || echo URL not set... && goto url_set
-
-:boot
+:hirens
+echo Booting Hirens Boot CD PE x64...
 imgfree
-kernel http://${boot_domain}/wimboot
-initrd -n bootmgr     ${win_base_url}/${win_arch}/${version}/bootmgr       bootmgr ||
-initrd -n bootmgr.efi ${win_base_url}/${win_arch}/${version}/bootmgr.efi   bootmgr.efi ||      
-initrd -n bcd         ${win_base_url}/${win_arch}/${version}/boot/bcd      bcd ||
-initrd -n bcd         ${win_base_url}/${win_arch}/${version}/Boot/BCD      bcd ||
-initrd -n boot.sdi    ${win_base_url}/${win_arch}/${version}/boot/boot.sdi boot.sdi ||
-initrd -n boot.sdi    ${win_base_url}/${win_arch}/${version}/Boot/boot.sdi boot.sdi ||
-initrd -n boot.wim    ${win_base_url}/${win_arch}/${version}/sources/boot.wim boot.wim
+kernel https://boot.netboot.xyz/wimboot
+initrd -n bootmgr ${base-url}/BOOTMGR       bootmgr ||
+initrd -n bootmgr.efi ${base-url}/bootmgr.efi   bootmgr.efi ||      
+initrd -n bcd         ${base-url}/boot/bcd  bcd||
+initrd -n boot.sdi    ${base-url}/boot/boot.sdi  boot.sdi||
+initrd -n boot.wim    ${base-url}/sources/boot.wim boot.wim
 boot
 
-:windows_exit
-exit 0
+:exit
+exit
